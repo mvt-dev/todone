@@ -7,7 +7,6 @@ exports.up = function(knex) {
     table.string('id').primary();
     table.string('username').unique().notNullable();
     table.string('password').notNullable();
-    table.timestamps(true, true);
   });
 };
 
