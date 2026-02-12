@@ -8,5 +8,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     return redirect('/signin')
   }
 
-  return <>{children}</>
+  return (
+    <div className="h-screen bg-gray-50">
+      {children}
+    </div>
+  )
 }
