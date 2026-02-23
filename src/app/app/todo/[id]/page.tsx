@@ -5,14 +5,23 @@ import { get } from '@/actions/todo'
 import { Button } from '@/components/ui/button'
 import TodoForm from './todo-form'
 
+interface Todo {
+  id: string
+  title: string
+  description: string
+  done: boolean
+  checklist: { title: string; done: boolean }[]
+}
+
 export default async function TodoCrudPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   
-  const todo = {
+  const todo:Todo = {
     id,
     title: '',
     description: '',
-    done: false
+    done: false,
+    checklist: [],
   }
 
   if (id !== 'new') {
@@ -21,6 +30,7 @@ export default async function TodoCrudPage({ params }: { params: Promise<{ id: s
     todo.title = result?.title || ''
     todo.description = result?.description || ''
     todo.done = result?.done || false
+    todo.checklist = result?.checklist || []
   }
 
   return (
