@@ -7,6 +7,11 @@ const db = knex({
     filename: path.join(process.cwd(), 'database.sqlite'),
   },
   useNullAsDefault: true,
+  pool: {
+    afterCreate: (conn: any, cb: any) => {
+      conn.run('PRAGMA foreign_keys = ON', cb)
+    },
+  },
 })
 
 export default db

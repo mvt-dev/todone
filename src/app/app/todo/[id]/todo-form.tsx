@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useState, useRef } from 'react'
-import { Trash2, Plus } from 'lucide-react'
+import { Trash2, Plus, CalendarIcon } from 'lucide-react'
 import { save, remove } from '@/actions/todo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,9 @@ import { FieldGroup, Field, FieldLabel, FieldError } from '@/components/ui/field
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { formatDateString, parseDateString } from '@/lib/date'
 
 interface ChecklistItem {
   title: string
@@ -22,6 +25,7 @@ interface TodoFormProps {
     title: string
     description: string
     done: boolean
+    date: string
     checklist?: ChecklistItem[]
   }
 }
@@ -32,6 +36,8 @@ export default function TodoForm({ todo }: TodoFormProps) {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(todo.checklist ?? [])
   const [newItemTitle, setNewItemTitle] = useState('')
   const newItemRef = useRef<HTMLInputElement>(null)
+  const [date, setDate] = useState<Date | undefined>(parseDateString(todo.date))
+  const [dateOpen, setDateOpen] = useState(false)
 
   function addItem() {
     const title = newItemTitle.trim()
@@ -57,6 +63,7 @@ export default function TodoForm({ todo }: TodoFormProps) {
     <>
       <form action={saveAction} id="todo-form">
         <input type="hidden" name="id" value={todo?.id ?? 'new'} />
+        <input type="hidden" name="date" value={date ? formatDateString(date) : ''} />
         <input type="hidden" name="checklist" value={JSON.stringify(checklist)} />
         <FieldGroup>
           <Field data-invalid={!!saveState?.errors?.title}>
@@ -68,6 +75,24 @@ export default function TodoForm({ todo }: TodoFormProps) {
             <FieldLabel htmlFor="description">Description</FieldLabel>
             <Textarea id="description" name="description" defaultValue={saveState?.todo?.description ?? ''} aria-invalid={!!saveState?.errors?.description} />
             {saveState?.errors?.description && <FieldError>{saveState?.errors?.description[0]}</FieldError>}
+          </Field>
+          <Field>
+            <FieldLabel>Date</FieldLabel>
+            <Popover open={dateOpen} onOpenChange={setDateOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" type="button" className={`bg-transparent w-full justify-between text-left font-normal ${!date ? 'text-muted-foreground' : ''}`}>
+                  {date ? formatDateString(date) : 'Pick a date'}
+                  <CalendarIcon className="h-4 w-4 text-gray-400" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => { setDate(d); setDateOpen(false) }}
+                />
+              </PopoverContent>
+            </Popover>
           </Field>
           <Field orientation="horizontal">
             <Switch id="done" name="done" defaultChecked={saveState?.todo?.done ?? false} />
@@ -123,6 +148,7 @@ export default function TodoForm({ todo }: TodoFormProps) {
         {todo?.id !== 'new' && (
           <form action={removeAction} className="w-full">
             <input type="hidden" name="id" value={todo.id} />
+            <input type="hidden" name="date" value={todo.date} />
             <Button type="submit" variant="destructive" disabled={removePending} className="w-full">
               {removePending ? 'Deleting...' : 'Delete'}
             </Button>
