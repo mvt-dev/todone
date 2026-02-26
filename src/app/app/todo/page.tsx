@@ -52,7 +52,7 @@ export default async function TodoListPage({ searchParams }: Props) {
         <Link href={`/app/todo/new?date=${selectedDate}`} className="w-full">
           <Button className="flex items-center gap-2 w-full">
             <Plus className="h-4 w-4" />
-            New Todo
+            New todo
           </Button>
         </Link>
         {todos.length === 0 ? (

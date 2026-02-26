@@ -46,11 +46,13 @@ export async function save(prevState: unknown, formData: FormData) {
     user: session?.user?.id,
     title: formData.get('title'),
     description: formData.get('description'),
-    done: Boolean(formData.get('done')),
+    done: formData.get('done') === 'true',
     date: formData.get('date'),
     time: formData.get('time'),
     checklist: JSON.parse(formData.get('checklist') as string),
   }
+  console.log(formData.get('done'))
+  console.log(data)
   const validation = z.object({
     id: z.literal('new').or(z.uuid()),
     user: z.uuid(),
