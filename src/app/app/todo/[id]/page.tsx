@@ -5,7 +5,7 @@ import { get } from '@/actions/todo'
 import { Button } from '@/components/ui/button'
 import { todayString } from '@/lib/date'
 import { Todo } from '@/interfaces/todo'
-import TodoForm from './todo-form'
+import TodoForm from './form'
 
 export default async function TodoCrudPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ date?: string }> }) {
   const { id } = await params
@@ -17,6 +17,8 @@ export default async function TodoCrudPage({ params, searchParams }: { params: P
     description: '',
     done: false,
     date: query.date || todayString(),
+    time: '',
+    order: 0,
     checklist: [],
   }
 
@@ -27,6 +29,8 @@ export default async function TodoCrudPage({ params, searchParams }: { params: P
     todo.description = result?.description || ''
     todo.done = result?.done || false
     todo.date = result?.date || todayString()
+    todo.time = result?.time || ''
+    todo.order = result?.order ?? 0
     todo.checklist = result?.checklist || []
   }
 

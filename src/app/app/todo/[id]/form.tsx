@@ -1,11 +1,8 @@
 'use client'
 
 import { useActionState, useState, useRef, useMemo } from 'react'
-import { DragDropProvider } from '@dnd-kit/react'
-import { useSortable } from '@dnd-kit/react/sortable'
-import { PointerSensor, PointerActivationConstraints } from '@dnd-kit/dom'
-import { arrayMove } from '@dnd-kit/sortable'
 import { Trash2, Plus, CalendarIcon, GripVertical } from 'lucide-react'
+import { DraggableList } from '@/components/draggable-list'
 import { save, remove } from '@/actions/todo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,42 +20,6 @@ interface TodoFormProps {
   todo: Todo
 }
 
-interface SortableChecklistItemProps {
-  item: TodoChecklist
-  index: number
-  onToggle: (id: string) => void
-  onRemove: (id: string) => void
-  onUpdateTitle: (id: string, title: string) => void
-}
-
-function SortableChecklistItem({ item, index, onToggle, onRemove, onUpdateTitle }: SortableChecklistItemProps) {
-  const { ref, handleRef, isDragging } = useSortable({ id: item.id, index })
-
-  return (
-    <li ref={ref} className={`flex items-center gap-2 rounded-md border px-3 py-2 bg-background ${isDragging ? 'opacity-50' : ''}`}>
-      <button type="button" ref={handleRef} className="cursor-grab touch-none text-gray-400 hover:text-gray-600">
-        <GripVertical className="h-4 w-4" />
-      </button>
-      <Checkbox
-        checked={item.done}
-        onCheckedChange={() => onToggle(item.id)}
-      />
-      <Input
-        value={item.title}
-        onChange={e => onUpdateTitle(item.id, e.target.value)}
-        className={`flex-1 border-0 shadow-none h-auto p-0 focus-visible:ring-0 text-sm ${item.done ? 'line-through text-gray-400' : ''}`}
-      />
-      <button
-        type="button"
-        onClick={() => onRemove(item.id)}
-        className="text-gray-400 hover:text-destructive transition-colors"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
-    </li>
-  )
-}
-
 export default function TodoForm({ todo }: TodoFormProps) {
   const [saveState, saveAction, savePending] = useActionState<any, FormData>(save, { todo, errors: {} })
   const [removeState, removeAction, removePending] = useActionState(remove, null)
@@ -67,6 +28,7 @@ export default function TodoForm({ todo }: TodoFormProps) {
   const newItemRef = useRef<HTMLInputElement>(null)
   const [date, setDate] = useState<Date | undefined>(parseDateString(todo.date))
   const [dateOpen, setDateOpen] = useState(false)
+  const [time, setTime] = useState(todo.time || '00:00')
 
   const checklistJSON = useMemo(() => JSON.stringify(checklist.map((item) => ({
     title: item.title,
@@ -93,11 +55,6 @@ export default function TodoForm({ todo }: TodoFormProps) {
     setChecklist(prev => prev.map((item) => item.id === id ? { ...item, title } : item))
   }
 
-  function handleDragEnd(event: any) {
-    const { source } = event.operation
-    setChecklist(prev => arrayMove(prev, source.sortable.initialIndex, source.sortable.index))
-  }
-
   return (
     <>
       <form action={saveAction} id="todo-form">
@@ -115,23 +72,40 @@ export default function TodoForm({ todo }: TodoFormProps) {
             <Textarea id="description" name="description" defaultValue={saveState?.todo?.description ?? ''} aria-invalid={!!saveState?.errors?.description} />
             {saveState?.errors?.description && <FieldError>{saveState?.errors?.description[0]}</FieldError>}
           </Field>
-          <Field>
+          <Field className="flex-1">
             <FieldLabel>Date</FieldLabel>
-            <Popover open={dateOpen} onOpenChange={setDateOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" type="button" className={`bg-transparent w-full justify-between text-left font-normal ${!date ? 'text-muted-foreground' : ''}`}>
-                  {date ? formatDateString(date) : 'Pick a date'}
-                  <CalendarIcon className="h-4 w-4 text-gray-400" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(d) => { setDate(d); setDateOpen(false) }}
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="w-full flex gap-2">
+              <Popover open={dateOpen} onOpenChange={setDateOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" type="button" className={`flex-grow bg-transparent justify-between text-left font-normal text-base md:text-sm ${!date ? 'text-muted-foreground' : ''}`}>
+                    {date ? formatDateString(date) : 'Pick a date'}
+                    <CalendarIcon className="h-4 w-4 text-gray-400" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(d) => { setDate(d); setDateOpen(false) }}
+                  />
+                </PopoverContent>
+              </Popover>
+              <Input
+                name="time"
+                className="flex-shrink-0 w-17"
+                value={time}
+                maxLength={5}
+                placeholder="00:00"
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9]/g, '').slice(0, 4)
+                  if (raw.length >= 3) {
+                    setTime(raw.slice(0, 2) + ':' + raw.slice(2))
+                  } else {
+                    setTime(raw)
+                  }
+                }}
+              />
+            </div>
           </Field>
           <Field orientation="horizontal">
             <Switch id="done" name="done" defaultChecked={saveState?.todo?.done ?? false} />
@@ -140,24 +114,34 @@ export default function TodoForm({ todo }: TodoFormProps) {
           <Separator />
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium">Checklist</span>
-            <DragDropProvider onDragEnd={handleDragEnd} sensors={[PointerSensor.configure({ activationConstraints: [new PointerActivationConstraints.Delay({ value: 100, tolerance: 5 })] })]}>
-              <ul className="flex flex-col gap-1">
-                {checklist.length === 0 && (
-                  <li className="text-sm text-gray-500">No checklist items yet.</li>
-                )}
-                {checklist.map((item, index) => (
-                  <SortableChecklistItem
-                    key={item.id}
-                    item={item}
-                    index={index}
-                    onToggle={toggleItem}
-                    onRemove={removeItem}
-                    onUpdateTitle={updateItemTitle}
+            <DraggableList
+              items={checklist}
+              onReorder={setChecklist}
+              renderItem={(item, { handleRef, isDragging }) => (
+                <div className={`flex items-center gap-2 rounded-md border px-3 py-2 bg-background ${isDragging ? 'opacity-50' : ''}`}>
+                  <button type="button" ref={handleRef} className="cursor-grab touch-none text-gray-400 hover:text-gray-600">
+                    <GripVertical className="h-4 w-4" />
+                  </button>
+                  <Checkbox
+                    checked={item.done}
+                    onCheckedChange={() => toggleItem(item.id)}
                   />
-                ))}
-              </ul>
-            </DragDropProvider>
-            <div className="flex gap-1">
+                  <Input
+                    value={item.title}
+                    onChange={e => updateItemTitle(item.id, e.target.value)}
+                    className={`flex-1 border-0 shadow-none h-auto p-0 focus-visible:ring-0 text-sm ${item.done ? 'line-through text-gray-400' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.id)}
+                    className="text-gray-400 hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            />
+            <div className="flex gap-2">
               <Input
                 ref={newItemRef}
                 value={newItemTitle}
