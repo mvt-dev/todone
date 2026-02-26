@@ -19,7 +19,7 @@ export async function get(id: string) {
   const session = await auth()
   const results = await Promise.all([
     db('todo').where({ id, user: session?.user?.id }).first(),
-    db('todo_checklist').where('todo', id),
+    db('todo_checklist').select('id', 'title', 'done').where('todo', id).orderBy('order', 'asc'),
   ])
   return {
     ...results[0],
@@ -71,11 +71,12 @@ export async function save(prevState: unknown, formData: FormData) {
         date: validation.data.date,
       })
       if (validation.data.checklist.length) {
-        await db('todo_checklist').transacting(trx).insert(validation.data.checklist.map(checklist => ({
+        await db('todo_checklist').transacting(trx).insert(validation.data.checklist.map((checklist, index) => ({
           id: uuid(),
           todo: id,
           title: checklist.title,
           done: checklist.done ? 1 : 0,
+          order: index,
         })))
       }
     })
@@ -101,11 +102,12 @@ export async function save(prevState: unknown, formData: FormData) {
       if (validation.data.checklist.length) {
         await db('todo_checklist')
           .transacting(trx)
-          .insert(validation.data.checklist.map(checklist => ({
+          .insert(validation.data.checklist.map((checklist, index) => ({
             id: uuid(),
             todo: validation.data.id,
             title: checklist.title,
             done: checklist.done ? 1 : 0,
+            order: index,
           })))
       }
     })

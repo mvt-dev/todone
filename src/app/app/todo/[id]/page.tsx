@@ -4,22 +4,14 @@ import Link from 'next/link'
 import { get } from '@/actions/todo'
 import { Button } from '@/components/ui/button'
 import { todayString } from '@/lib/date'
+import { Todo } from '@/interfaces/todo'
 import TodoForm from './todo-form'
-
-interface Todo {
-  id: string
-  title: string
-  description: string
-  done: boolean
-  date: string
-  checklist: { title: string; done: boolean }[]
-}
 
 export default async function TodoCrudPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ date?: string }> }) {
   const { id } = await params
   const query = await searchParams
 
-  const todo:Todo = {
+  const todo: Todo = {
     id,
     title: '',
     description: '',
