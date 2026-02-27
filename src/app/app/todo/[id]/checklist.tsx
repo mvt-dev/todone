@@ -43,7 +43,7 @@ export function Checklist({ items, onChange }: ChecklistProps) {
     <Collapsible open={open} onOpenChange={setOpen} className="rounded-md border border-input p-2 shadow-xs">
       <CollapsibleTrigger asChild>
         <div className="w-full flex justify-between items-center px-1 py-1">
-          <span className="text-base font-medium">Checklist{items.length ? ` (${items.filter(i => i.done).length}/${items.length})` : ''}</span>
+          <span className="text-sm font-medium">Checklist{items.length ? ` (${items.filter(i => i.done).length}/${items.length})` : ''}</span>
           {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
         </div>
       </CollapsibleTrigger>

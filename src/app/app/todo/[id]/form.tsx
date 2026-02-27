@@ -2,7 +2,8 @@
 
 import { useActionState, useState, useRef, useMemo } from 'react'
 import Link from 'next/link'
-import { CalendarIcon, X } from 'lucide-react'
+import { CalendarIcon, X, ChevronUp, ChevronDown } from 'lucide-react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Checklist } from './checklist'
 import { save, remove } from '@/actions/todo'
 import { Button } from '@/components/ui/button'
@@ -35,6 +36,7 @@ export default function TodoForm({ todo }: TodoFormProps) {
   const [time, setTime] = useState(todo.time || '00:00')
   const [done, setDone] = useState(todo.done || false)
   const [description, setDescription] = useState(todo.description || '')
+  const [descriptionOpen, setDescriptionOpen] = useState(!!todo.description)
 
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -101,11 +103,21 @@ export default function TodoForm({ todo }: TodoFormProps) {
           />
         </div>
         <input type="hidden" name="description" value={description} />
-        <Editor
-          editorSerializedState={description ? tryParseJSON(description) : undefined}
-          onSerializedChange={(state) => setDescription(JSON.stringify(state))}
-          placeholder="Description..."
-        />
+        <Collapsible open={descriptionOpen} onOpenChange={setDescriptionOpen} className="rounded-md border border-input p-2 shadow-xs">
+          <CollapsibleTrigger asChild>
+            <div className="w-full flex justify-between items-center px-1 py-1">
+              <span className="text-sm font-medium">Description</span>
+              {descriptionOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-2 px-1 pb-2">
+            <Editor
+              editorSerializedState={description ? tryParseJSON(description) : undefined}
+              onSerializedChange={(state) => setDescription(JSON.stringify(state))}
+              placeholder="Description..."
+            />
+          </CollapsibleContent>
+        </Collapsible>
         <Checklist items={checklist} onChange={setChecklist} />
       </form>
       <div className="flex flex-col gap-2">
