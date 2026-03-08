@@ -11,7 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="h-screen bg-gray-50">
-      <div className="pb-14 min-h-full">
+      <div className="pb-14 min-h-full max-w-[1000px] mx-auto">
         {children}
       </div>
       <Navigation />
