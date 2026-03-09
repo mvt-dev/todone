@@ -7,7 +7,7 @@ exports.up = function(knex) {
     table.string('id').primary()
     table.string('todo').notNullable().references('id').inTable('todo').onDelete('CASCADE')
     table.string('title').notNullable()
-    table.integer('done').defaultTo(0)
+    table.boolean('done').defaultTo(false)
   })
 };
 

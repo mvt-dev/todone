@@ -1,16 +1,9 @@
 import knex from 'knex'
-import path from 'path'
 
 const db = knex({
-  client: 'sqlite3',
+  client: 'pg',
   connection: {
-    filename: path.join(process.cwd(), 'database.sqlite'),
-  },
-  useNullAsDefault: true,
-  pool: {
-    afterCreate: (conn: any, cb: any) => {
-      conn.run('PRAGMA foreign_keys = ON', cb)
-    },
+    connectionString: process.env.DATABASE_URL,
   },
 })
 

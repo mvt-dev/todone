@@ -1,12 +1,11 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/lib/auth'
+import { userIsActive, signout } from '@/actions/auth'
 import Navigation from './navigation'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const session: any = await auth()
+  const isActive = await userIsActive()
 
-  if (!session) {
-    return redirect('/signin')
+  if (!isActive) {
+    await signout()
   }
 
   return (

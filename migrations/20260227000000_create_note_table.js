@@ -15,7 +15,7 @@ exports.up = function(knex) {
       table.string('id').primary()
       table.string('note').notNullable().references('id').inTable('note').onDelete('CASCADE')
       table.string('title').notNullable()
-      table.integer('done').defaultTo(0)
+      table.boolean('done').defaultTo(false)
       table.integer('order').defaultTo(0)
     })
 };

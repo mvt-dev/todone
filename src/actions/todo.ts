@@ -12,13 +12,12 @@ export async function list(date: string) {
     .select(
       'todo.*',
       db('todo_checklist').where('todo', db.ref('todo.id')).count('id').as('checklist_total'),
-      db('todo_checklist').where('todo', db.ref('todo.id')).sum('done').as('checklist_done'),
+      db('todo_checklist').where('todo', db.ref('todo.id')).sum(db.raw('done::int')).as('checklist_done'),
     )
     .where({ date, user: session?.user?.id })
     .orderBy('order', 'asc')
   return todos.map((t: any) => ({
     ...t,
-    done: t.done === 1,
     checklist_total: Number(t.checklist_total),
     checklist_done: Number(t.checklist_done),
   }))
@@ -32,9 +31,7 @@ export async function get(id: string) {
   ])
   return {
     ...results[0],
-    done: results[0].done === 1,
-    time: results[0].time || '',
-    checklist: results[1].map((item: any) => ({ ...item, done: item.done === 1 })),
+    checklist: results[1],
   }
 }
 
@@ -51,8 +48,7 @@ export async function save(prevState: unknown, formData: FormData) {
     time: formData.get('time'),
     checklist: JSON.parse(formData.get('checklist') as string),
   }
-  console.log(formData.get('done'))
-  console.log(data)
+
   const validation = z.object({
     id: z.literal('new').or(z.uuid()),
     user: z.uuid(),
@@ -82,7 +78,7 @@ export async function save(prevState: unknown, formData: FormData) {
         user: validation.data.user,
         title: validation.data.title,
         description: validation.data.description,
-        done: validation.data.done ? 1 : 0,
+        done: validation.data.done,
         date: validation.data.date,
         time: validation.data.time,
         order: (maxOrder?.max ?? -1) + 1,
@@ -92,7 +88,7 @@ export async function save(prevState: unknown, formData: FormData) {
           id: uuid(),
           todo: id,
           title: checklist.title,
-          done: checklist.done ? 1 : 0,
+          done: checklist.done,
           order: index,
         })))
       }
@@ -105,7 +101,7 @@ export async function save(prevState: unknown, formData: FormData) {
           user: validation.data.user,
           title: validation.data.title,
           description: validation.data.description,
-          done: validation.data.done ? 1 : 0,
+          done: validation.data.done,
           date: validation.data.date,
           time: validation.data.time,
         })
@@ -124,7 +120,7 @@ export async function save(prevState: unknown, formData: FormData) {
             id: uuid(),
             todo: validation.data.id,
             title: checklist.title,
-            done: checklist.done ? 1 : 0,
+            done: checklist.done,
             order: index,
           })))
       }

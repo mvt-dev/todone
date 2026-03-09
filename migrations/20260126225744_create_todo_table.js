@@ -8,7 +8,7 @@ exports.up = function(knex) {
     table.string('user').notNullable().references('id').inTable('user').onDelete('CASCADE')
     table.string('title').notNullable()
     table.text('description')
-    table.integer('done').defaultTo(0)
+    table.boolean('done').defaultTo(false)
   })
 };
 

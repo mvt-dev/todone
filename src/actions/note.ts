@@ -12,7 +12,7 @@ export async function list() {
     .select(
       'note.*',
       db('note_checklist').where('note', db.ref('note.id')).count('id').as('checklist_total'),
-      db('note_checklist').where('note', db.ref('note.id')).sum('done').as('checklist_done'),
+      db('note_checklist').where('note', db.ref('note.id')).sum(db.raw('done::int')).as('checklist_done'),
     )
     .where({ user: session?.user?.id })
     .orderBy('order', 'asc')
@@ -31,7 +31,7 @@ export async function get(id: string) {
   ])
   return {
     ...results[0],
-    checklist: results[1].map((item: any) => ({ ...item, done: item.done === 1 })),
+    checklist: results[1],
   }
 }
 
@@ -80,7 +80,7 @@ export async function save(prevState: unknown, formData: FormData) {
           id: uuid(),
           note: id,
           title: checklist.title,
-          done: checklist.done ? 1 : 0,
+          done: checklist.done,
           order: index,
         })))
       }
@@ -108,7 +108,7 @@ export async function save(prevState: unknown, formData: FormData) {
             id: uuid(),
             note: validation.data.id,
             title: checklist.title,
-            done: checklist.done ? 1 : 0,
+            done: checklist.done,
             order: index,
           })))
       }

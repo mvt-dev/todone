@@ -1,41 +1,11 @@
-// Update with your config settings.
+require('dotenv').config({ path: ['.env.local', '.env'] })
 
-/**
- * @type { Object.<string, import("knex").Knex.Config> }
- */
 module.exports = {
-
-  development: {
-    client: 'sqlite3',
-    connection: {
-      filename: './database.sqlite'
-    },
-    useNullAsDefault: true,
-    migrations: {
-      directory: './migrations'
-    }
+  client: 'pg',
+  connection: {
+    connectionString: process.env.DATABASE_URL,
   },
-
-  staging: {
-    client: 'sqlite3',
-    connection: {
-      filename: './database.sqlite'
-    },
-    useNullAsDefault: true,
-    migrations: {
-      directory: './migrations'
-    }
+  migrations: {
+    directory: './migrations'
   },
-
-  production: {
-    client: 'sqlite3',
-    connection: {
-      filename: './database.sqlite'
-    },
-    useNullAsDefault: true,
-    migrations: {
-      directory: './migrations'
-    }
-  }
-
 };

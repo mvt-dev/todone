@@ -1,7 +1,10 @@
 'use server'
  
-import { signIn, signOut } from '@/lib/auth'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { auth, signIn } from '@/lib/auth'
 import { AuthError } from 'next-auth'
+import db from '@/lib/db'
  
 export async function signin(prevState: string | undefined, formData: FormData) {
   try {
@@ -20,5 +23,17 @@ export async function signin(prevState: string | undefined, formData: FormData) 
 }
 
 export async function signout() {
-  await signOut({ redirectTo: '/' })
+  const cookieStore = await cookies()
+  cookieStore.getAll().forEach((cookie) => {
+    if (cookie.name.includes('authjs')) {
+      cookieStore.delete(cookie.name)
+    }
+  })
+  redirect('/')
+}
+
+export async function userIsActive() {
+  const session = await auth()
+  const user = await db('user').where('id', session?.user?.id).first()
+  return !!user
 }
